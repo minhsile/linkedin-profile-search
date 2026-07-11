@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec — LinkedIn Profile Crawl Pipeline</title>
+<style>
+  :root{
+    --ivory:#FAF9F5; --slate:#141413; --clay:#D97757; --oat:#E3DACC; --olive:#788C5D;
+    --gray-150:#F0EEE6; --gray-300:#D1CFC5; --gray-500:#87867F; --gray-700:#3D3D3A; --white:#fff;
+    --serif:ui-serif,Georgia,'Times New Roman',serif;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,Monaco,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--sans);background:var(--ivory);color:var(--gray-700);line-height:1.6;padding:56px 32px 120px;-webkit-font-smoothing:antialiased;}
+  .page{max-width:1040px;margin:0 auto;}
+  header.page-head{margin-bottom:44px;max-width:840px;}
+  .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500);margin-bottom:12px;}
+  h1{font-family:var(--serif);font-weight:500;font-size:38px;line-height:1.15;color:var(--slate);margin-bottom:16px;letter-spacing:-.01em;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+  .meta .pill{font-family:var(--mono);font-size:11.5px;background:var(--gray-150);border:1px solid var(--gray-300);color:var(--gray-700);padding:4px 10px;border-radius:999px;}
+  .goal{background:var(--gray-150);border:1.5px solid var(--gray-300);border-radius:12px;padding:16px 20px;font-size:15px;color:var(--gray-700);}
+  .goal .label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);display:block;margin-bottom:6px;}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:36px 0 56px;}
+  @media(max-width:820px){.summary{grid-template-columns:repeat(2,1fr);}}
+  .summary .cell{background:var(--white);border:1px solid var(--gray-300);border-radius:12px;padding:16px;}
+  .summary .cell .k{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-500);margin-bottom:8px;}
+  .summary .cell .v{font-size:14.5px;color:var(--slate);font-weight:500;line-height:1.4;}
+  section{margin-bottom:52px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;}
+  .sec-head .num{font-family:var(--mono);font-size:12px;background:var(--oat);color:var(--slate);padding:3px 9px;border-radius:8px;}
+  .sec-head h2{font-family:var(--serif);font-weight:500;font-size:25px;color:var(--slate);letter-spacing:-.01em;}
+  h3{font-size:15px;color:var(--slate);margin:22px 0 10px;font-weight:600;}
+  p{margin-bottom:12px;font-size:14.5px;}
+  ul{margin:0 0 12px 22px;font-size:14.5px;}
+  li{margin-bottom:5px;}
+  strong{color:var(--slate);}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--gray-150);border:1px solid var(--gray-300);border-radius:5px;padding:1px 5px;color:var(--gray-700);}
+  pre{background:var(--slate);color:#e8e6df;font-family:var(--mono);font-size:12.5px;line-height:1.55;padding:18px 20px;border-radius:12px;overflow-x:auto;margin:6px 0 16px;}
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit;}
+  table{width:100%;border-collapse:collapse;margin:6px 0 18px;font-size:13.5px;}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--gray-300);vertical-align:top;}
+  th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500);background:var(--gray-150);}
+  tr:last-child td{border-bottom:none;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:820px){.cols{grid-template-columns:1fr;}}
+  .card{background:var(--white);border:1px solid var(--gray-300);border-radius:12px;padding:18px 20px;}
+  .card.in{border-left:3px solid var(--olive);}
+  .card.out{border-left:3px solid var(--clay);}
+  .card h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--gray-500);margin-bottom:10px;font-family:var(--mono);}
+  .flow{background:var(--white);border:1px dashed var(--gray-300);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:12.5px;color:var(--gray-700);white-space:pre-wrap;line-height:1.7;}
+  .badge{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:6px;background:var(--oat);color:var(--slate);}
+  .badge.new{background:#e6efdc;color:#3f5a2b;}
+  .badge.enrich{background:#f7e2d6;color:#8a3d1e;}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--gray-300);font-size:12.5px;color:var(--gray-500);}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="page-head">
+  <div class="eyebrow">Design Spec · Superpowers</div>
+  <h1>LinkedIn Profile Crawl Pipeline</h1>
+  <div class="meta">
+    <span class="pill">2026-07-12</span>
+    <span class="pill">Status: Design (chờ duyệt)</span>
+    <span class="pill">D:\workspace\linkedin-profile-search</span>
+  </div>
+  <div class="goal">
+    <span class="label">Mục tiêu</span>
+    Crawl profile LinkedIn từ Apify (<code>harvestapi/linkedin-profile-search</code>) theo bộ lọc,
+    lưu <strong>hết thông tin</strong> vào <strong>Postgres</strong>, đảm bảo
+    <strong>mỗi người = 1 bản ghi duy nhất</strong> (enrich chứ không nhân bản),
+    có <strong>job runner resume được</strong>, theo dõi <strong>throughput</strong> và
+    <strong>dashboard web local</strong>.
+  </div>
+</header>
+
+<div class="summary">
+  <div class="cell"><div class="k">Dedup</div><div class="v">Slug chuẩn hóa + UNIQUE (bỏ fuzzy)</div></div>
+  <div class="cell"><div class="k">Quy mô</div><div class="v">~50k profile · 1 máy · không queue</div></div>
+  <div class="cell"><div class="k">Dashboard</div><div class="v">FastAPI + Chart.js (local)</div></div>
+  <div class="cell"><div class="k">Run mode</div><div class="v">Job runner resume + idempotent</div></div>
+</div>
+
+<section>
+  <div class="sec-head"><span class="num">01</span><h2>Mục tiêu</h2></div>
+  <p>Thu thập profile LinkedIn theo tiêu chí lọc (chức danh, địa điểm, công ty, ngành...),
+  lưu toàn bộ thông tin, chống trùng lặp khi crawl (kể cả nhiều nguồn về sau), và giám sát được luồng crawl.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">02</span><h2>Phạm vi</h2></div>
+  <div class="cols">
+    <div class="card in">
+      <h4>Trong phạm vi</h4>
+      <ul>
+        <li>1 nguồn: harvestapi (search theo filter)</li>
+        <li>Postgres trong Docker</li>
+        <li><strong>1 bảng data <code>person</code></strong> (chi tiết để JSONB) + 2 bảng vận hành</li>
+        <li>Dedup theo slug chuẩn hóa (UNIQUE) + enrich</li>
+        <li>Job runner resume + checkpoint</li>
+        <li>Metrics throughput + dashboard FastAPI + Chart.js</li>
+        <li>Email = cột optional (chưa crawl)</li>
+      </ul>
+    </div>
+    <div class="card out">
+      <h4>Ngoài phạm vi (chừa chỗ mở rộng)</h4>
+      <ul>
+        <li>Fuzzy matching — giữ sẵn cột <code>norm_name</code>/<code>norm_company</code>, bật sau không cần migrate lại</li>
+        <li>Email enrichment</li>
+        <li>Nhiều nguồn khác (Apollo/PDL/Bright Data) — kiến trúc adapter cho phép thêm</li>
+        <li>Lên lịch định kỳ (scheduling)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">03</span><h2>Quyết định thiết kế</h2></div>
+  <table>
+    <tr><th>Chủ đề</th><th>Quyết định</th></tr>
+    <tr><td>Dedup</td><td><strong>Slug chuẩn hóa + UNIQUE</strong>, exact match. Bỏ fuzzy (YAGNI cho 1 nguồn).</td></tr>
+    <tr><td>Không có slug</td><td>Không bỏ data — <strong>insert + gắn cờ <code>needs_review</code></strong>.</td></tr>
+    <tr><td>Quy mô</td><td>~50k profile, 1 máy, không cần message queue.</td></tr>
+    <tr><td>Dashboard</td><td><strong>FastAPI + Chart.js</strong> (self-contained, local).</td></tr>
+    <tr><td>Run mode</td><td><strong>Job runner resume được</strong> (checkpoint, idempotent).</td></tr>
+    <tr><td>Schema</td><td><strong>1 bảng <code>person</code></strong> (JSONB) + <code>crawl_run</code> + <code>run_metric</code>.</td></tr>
+    <tr><td>Email</td><td>Cột nullable, optional.</td></tr>
+    <tr><td>Stack</td><td>Python 3.12 (conda) + Postgres 16 (Docker).</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">04</span><h2>Kiến trúc</h2></div>
+  <div class="flow">Apify (harvestapi)  --raw items-->  SourceAdapter (normalize)  -->  CanonicalProfile
+      -->  Ingest Engine  (match slug -> INSERT | ENRICH | needs_review)  -->  Postgres(person)
+
+Job Runner (run lifecycle, checkpoint, ghi metrics)  -->  crawl_run / run_metric
+Dashboard (FastAPI + Chart.js)  đọc DB</div>
+  <ul>
+    <li><strong>SourceAdapter</strong> — biến raw record của 1 nguồn thành <code>CanonicalProfile</code>. Thêm nguồn = thêm adapter.</li>
+    <li><strong>Normalizer</strong> — URL to slug, tên/công ty to <code>norm_*</code>, tính content_hash.</li>
+    <li><strong>Ingest Engine</strong> — quyết định insert/enrich, merge JSONB, idempotent.</li>
+    <li><strong>Job Runner</strong> — điều phối 1 run, checkpoint, ghi throughput.</li>
+    <li><strong>DB layer</strong> — kết nối, helper upsert.</li>
+    <li><strong>Dashboard</strong> / <strong>CLI</strong> (<code>migrate</code>, <code>crawl</code>, <code>status</code>).</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">05</span><h2>Data model</h2></div>
+  <h3>person — bảng data duy nhất</h3>
+  <table>
+    <tr><th>Cột</th><th>Kiểu</th><th>Ghi chú</th></tr>
+    <tr><td>id</td><td>uuid PK</td><td></td></tr>
+    <tr><td>linkedin_slug</td><td>text UNIQUE</td><td>khóa dedup, đã chuẩn hóa; nullable (case hiếm)</td></tr>
+    <tr><td>linkedin_url</td><td>text</td><td>URL gốc</td></tr>
+    <tr><td>full_name / first_name / last_name</td><td>text</td><td></td></tr>
+    <tr><td>headline / location / country</td><td>text</td><td></td></tr>
+    <tr><td>current_company / current_title</td><td>text</td><td>cột lọc nhanh</td></tr>
+    <tr><td>connections / followers</td><td>int</td><td></td></tr>
+    <tr><td>email</td><td>text NULL</td><td>optional (chưa crawl)</td></tr>
+    <tr><td>norm_name / norm_company</td><td>text</td><td>dành cho fuzzy tương lai</td></tr>
+    <tr><td>data</td><td>JSONB</td><td>TẤT CẢ chi tiết: experience, education, skills, certs...</td></tr>
+    <tr><td>sources</td><td>text[]</td><td>các nguồn đã đóng góp</td></tr>
+    <tr><td>source_hashes</td><td>jsonb</td><td>{source: content_hash} để idempotent</td></tr>
+    <tr><td>needs_review</td><td>bool</td><td>true khi không có slug / nhập nhằng</td></tr>
+    <tr><td>created_at / updated_at / last_enriched_at</td><td>timestamptz</td><td></td></tr>
+  </table>
+  <p>Index: UNIQUE(<code>linkedin_slug</code>), index(<code>current_company</code>), GIN(<code>data</code>).</p>
+  <h3>crawl_run (vận hành: theo dõi + resume)</h3>
+  <p>id, source, status, params jsonb, apify_run_id, checkpoint jsonb (offset), started/finished_at,
+  tổng: fetched / inserted / enriched / unchanged / errors.</p>
+  <h3>run_metric (vận hành: chart throughput)</h3>
+  <p>id, run_id FK, ts, processed, inserted, enriched, errors, rate_per_sec (rolling). Ghi mỗi K item / T giây.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">06</span><h2>Cơ chế dedup + enrich</h2></div>
+  <p>Với mỗi <code>CanonicalProfile</code> P:</p>
+  <ul>
+    <li><strong>Chuẩn hóa URL to slug</strong>: bỏ https, www, subdomain quốc gia (vd <code>vn.</code>),
+    dấu <code>/</code> cuối, query string, lowercase.
+    VD <code>https://vn.linkedin.com/in/An-Nguyen-123/?trk=x</code> to <code>an-nguyen-123</code>.</li>
+    <li><strong>Tính content_hash</strong> của payload (theo nguồn) để idempotent.</li>
+    <li><strong>Khớp</strong>: có slug thì tra <code>WHERE linkedin_slug = :slug</code>; không có slug thì không đoán.</li>
+  </ul>
+  <p>Quyết định:</p>
+  <ul>
+    <li><span class="badge new">INSERT</span> khi không thấy (hoặc không slug thì kèm <code>needs_review</code>).</li>
+    <li><span class="badge">UNCHANGED</span> khi content_hash đã có trong <code>source_hashes[source]</code>.</li>
+    <li><span class="badge enrich">ENRICH</span> khi thấy và payload mới.</li>
+  </ul>
+  <h3>ENRICH (merge, không nhân bản)</h3>
+  <ul>
+    <li>Điền field còn thiếu (NULL/rỗng to giá trị mới). <strong>Không ghi đè</strong> giá trị đã có bằng rỗng.</li>
+    <li><strong>Deep-merge <code>data</code> JSONB</strong>: mảng experience/education/skills gộp + khử trùng theo
+    khóa tự nhiên (experience trùng nếu cùng company + title + khoảng thời gian).</li>
+    <li>Append source vào <code>sources[]</code>, cập nhật <code>source_hashes</code>, <code>last_enriched_at</code>.</li>
+  </ul>
+  <p><strong>Idempotent toàn cục</strong>: chạy lại/resume cùng payload to không tạo trùng (slug UNIQUE + content_hash).</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">07</span><h2>Job runner + resume + throughput</h2></div>
+  <ul>
+    <li>1 lần crawl = 1 <code>crawl_run</code> (params = filter + apify_run_id).</li>
+    <li>Iterate dataset Apify, upsert từng item, cập nhật <code>checkpoint.offset</code> định kỳ.</li>
+    <li>Crash/chạy lại cùng run id to resume từ checkpoint; idempotent nên reprocess an toàn.</li>
+    <li>Mỗi K item / T giây to ghi <code>run_metric</code> (rate_per_sec rolling = processed/elapsed).</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">08</span><h2>Monitoring / Dashboard</h2></div>
+  <p><strong>FastAPI + 1 trang HTML + Chart.js inline</strong> (không service ngoài), đọc Postgres:
+  danh sách run; chart throughput/giây; tổng inserted / enriched / unchanged / errors;
+  tổng person + breakdown theo sources; số needs_review. CLI <code>status</code> in nhanh run mới nhất.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">09</span><h2>Stack & hạ tầng</h2></div>
+  <ul>
+    <li><strong>Postgres 16</strong> trong Docker (docker-compose, volume bền). pg_trgm/unaccent bật sẵn để dành fuzzy.</li>
+    <li><strong>Python 3.12</strong> (conda). Libs: apify-client, psycopg v3, pydantic, fastapi + uvicorn, python-dotenv.</li>
+    <li>Migration = file SQL + script nhẹ (không Alembic). Config: <code>.env</code> + <code>config.json</code>.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">10</span><h2>Cấu trúc thư mục</h2></div>
+  <pre><code>linkedin-profile-search/
+├── docker-compose.yml
+├── .env.example
+├── requirements.txt
+├── config.example.json
+├── db/migrations/001_init.sql
+├── src/lps/
+│   ├── models.py        # pydantic CanonicalProfile
+│   ├── normalize.py     # url-&gt;slug, norm_name/company, content_hash
+│   ├── db.py            # kết nối, helpers
+│   ├── ingest.py        # upsert: match slug -&gt; insert/enrich, deep-merge
+│   ├── runner.py        # run lifecycle, checkpoint, metrics
+│   ├── cli.py           # migrate / crawl / status
+│   └── sources/{base.py, harvestapi.py}
+├── dashboard/{app.py, static/index.html}
+└── tests/</code></pre>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">11</span><h2>Error handling & Testing</h2></div>
+  <p><strong>Error handling:</strong> lỗi từng item không giết run (bắt to đếm errors to log to tiếp tục);
+  lỗi Apify run to status=failed + giữ checkpoint; DB transient to retry ngắn.</p>
+  <p><strong>Testing (TDD):</strong> unit test cho normalize (URL to slug các biến thể, content_hash ổn định);
+  ingest (insert; enrich điền thiếu; không ghi đè bằng rỗng; deep-merge + khử trùng; idempotent; thiếu slug to needs_review).
+  Dùng Postgres test (Docker) + rollback transaction mỗi test.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="num">12</span><h2>Câu hỏi mở / tương lai</h2></div>
+  <ul>
+    <li>Bật fuzzy khi thêm nguồn thứ 2 (đã chừa cột <code>norm_*</code>).</li>
+    <li>Bật email mode của harvestapi (đã có cột <code>email</code>).</li>
+    <li>Review UI cho <code>needs_review</code> (hiện chỉ gắn cờ).</li>
+  </ul>
+</section>
+
+<footer>
+  Design spec · LinkedIn Profile Crawl Pipeline · 2026-07-12 · render theo template
+  html-effectiveness (16-implementation-plan). Markdown là nguồn gốc:
+  docs/superpowers/specs/2026-07-12-linkedin-crawl-pipeline-design.md
+</footer>
+
+</div>
+</body>
+</html>

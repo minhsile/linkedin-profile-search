@@ -1,68 +1,72 @@
-# LinkedIn Profile Search — So sánh phương pháp thu thập profile theo filter
+# LinkedIn Profile Crawl Pipeline
 
-Repo nghiên cứu & so sánh các cách **tìm profile LinkedIn theo tiêu chí lọc**
-(chức danh, địa điểm, công ty, ngành, seniority...) trên **Apify** và các nền tảng khác.
+Crawl profile LinkedIn từ **Apify (`harvestapi`)** → **Postgres**, chống trùng (dedup theo
+slug, chỉ enrich chứ không nhân bản), có **job runner resume** + **dashboard throughput**.
 
-> ⚠️ Repo này hiện **chỉ chứa tài liệu nghiên cứu**, chưa có code.
-> Mục tiêu: chọn được nền tảng/phương pháp trước khi triển khai.
+## Tính năng
+- Search profile theo filter (chức danh, địa điểm, công ty, ngành...) qua harvestapi.
+- Lưu **full profile** vào Postgres (JSONB); cột `email` optional.
+- **Dedup** theo LinkedIn slug (UNIQUE) + **deep-merge enrich**, idempotent (chạy lại không trùng).
+- **Job runner resume** được (checkpoint) + ghi **throughput metrics**.
+- **Dashboard** FastAPI + Chart.js chạy local.
 
-- 📅 Cập nhật: **2026-07**
-- 📄 So sánh chi tiết từng nền tảng + giá + nguồn: [`docs/research-comparison.md`](docs/research-comparison.md)
+## Yêu cầu
+- **Docker** (chạy Postgres 16) · **uv** (`pip install uv`, để tạo venv Python 3.12) · **Apify token**.
 
----
+## Chạy nhanh (Quickstart)
 
-## TL;DR — Chọn nhanh theo nhu cầu
+```bash
+# 1) Môi trường
+uv venv --python 3.12 .venv
+source .venv/Scripts/activate          # Git Bash  |  PowerShell: .venv\Scripts\Activate.ps1
+uv pip install -r requirements.txt -e .
 
-| Bạn ưu tiên... | Nên chọn | Giá tham khảo |
-|---|---|---|
-| Test nhanh, ít tiền, linh hoạt, data tươi (live) | **harvestapi (Apify)** | $8/1000 (Full) |
-| Số lượng cực lớn 1 lần, tiết kiệm | **Bright Data — Dataset** | ~$2.5/1000 (min ~$250) |
-| Cần email để bán hàng, không cần code | **Apollo.io** | ~$49/tháng/seat |
-| Tuyệt đối tránh rủi ro khóa acc | Bất kỳ giải pháp **không cần cookie** | — |
+# 2) Database
+docker compose up -d                    # Postgres 16 @ localhost:5433
 
-**Khuyến nghị để BẮT ĐẦU: `harvestapi/linkedin-profile-search` trên Apify.**
-Lý do: pay-as-you-go (không phí cố định), filter mạnh nhất, data live, không cần cookie
-LinkedIn, có free $5/tháng để thử.
+# 3) Cấu hình + tạo schema
+cp .env.example .env                     # điền APIFY_TOKEN
+python -m lps.cli migrate
 
----
+# 4) Crawl
+cp config.example.json config.json       # sửa filter: currentJobTitles, locations, industryIds...
+python -m lps.cli crawl --config config.json
 
-## 3 nhóm giải pháp (khác nhau về bản chất)
-
-| Nhóm | Bản chất | Ví dụ |
-|---|---|---|
-| **A. Scrape LinkedIn live theo filter** | Cào dữ liệu LinkedIn thời gian thực, lọc theo tiêu chí | harvestapi (Apify), Bright Data Scraper API |
-| **B. Database B2B có sẵn** | Query kho dữ liệu riêng của họ (không phải LinkedIn real-time) | Bright Data Dataset, Coresignal, Apollo, People Data Labs |
-| **C. Tự động hóa bằng cookie của BẠN** | Dùng session LinkedIn cá nhân → **rủi ro khóa acc** | PhantomBuster |
-
----
-
-## Cấu trúc repo
-
-```
-linkedin-profile-search/
-├── README.md                       # bản tóm tắt + khuyến nghị (file này)
-└── docs/
-    └── research-comparison.md      # so sánh chi tiết + giá + nguồn tham khảo
+# 5) Theo dõi
+python -m lps.cli status                 # thống kê run trong terminal
+uvicorn dashboard.app:app --port 8000    # dashboard: http://localhost:8000
 ```
 
----
+## Lệnh CLI
 
-## ⚠️ Lưu ý pháp lý & rủi ro
-- Scrape LinkedIn vi phạm **Điều khoản dịch vụ (ToS)** của LinkedIn.
-- Lấy email/SĐT dính **GDPR / luật bảo vệ dữ liệu cá nhân** — cân nhắc kỹ khi dùng thương mại.
-- Ưu tiên giải pháp **không cần cookie** để tránh nguy cơ bị khóa tài khoản cá nhân.
+| Lệnh | Chức năng |
+|---|---|
+| `python -m lps.cli migrate` | Tạo / nâng cấp schema DB |
+| `python -m lps.cli crawl --config config.json` | Chạy 1 crawl |
+| `python -m lps.cli crawl --config config.json --resume <RUN_ID>` | Tiếp tục run bị dừng |
+| `python -m lps.cli status [--run <RUN_ID>]` | Xem trạng thái run |
 
-## Chạy pipeline
+## Test
 
-1. Tạo venv Python 3.12 bằng uv: `uv venv --python 3.12 .venv` (uv tự tải CPython 3.12 standalone). Kích hoạt: `source .venv/Scripts/activate` (Git Bash) hoặc `.venv\Scripts\Activate.ps1` (PowerShell). *(Cài uv 1 lần: `pip install uv`.)*
-2. `uv pip install -r requirements.txt -e .`
-3. `docker compose up -d`   # Postgres 16 tại localhost:5433
-4. `cp .env.example .env`   # điền APIFY_TOKEN
-5. `python -m lps.cli migrate`
-6. `cp config.example.json config.json`  # sửa filter
-7. `python -m lps.cli crawl --config config.json`
-8. `uvicorn dashboard.app:app --port 8000`  # dashboard tại http://localhost:8000
-9. `python -m lps.cli status`  # xem thống kê run
+```bash
+python -m pytest -q        # cần Docker Postgres đang chạy
+```
 
-Chi tiết vận hành/resume: xem `docs/RUNBOOK.md`.
-Kiến trúc & spec: `docs/superpowers/specs/`, kế hoạch: `docs/superpowers/plans/`.
+## Cấu trúc
+
+```
+src/lps/          settings · normalize · models · db · ingest · runner · cli · sources/
+dashboard/        FastAPI app + static (Chart.js)
+db/migrations/    SQL schema
+tests/            24 tests (unit + tích hợp DB)
+docs/             research-comparison.md · RUNBOOK.md · superpowers/{specs,plans}
+```
+
+## Tài liệu
+- **So sánh nền tảng** (Apify / Bright Data / Coresignal / Apollo...): [`docs/research-comparison.md`](docs/research-comparison.md)
+- **Vận hành / resume / dedup / needs_review**: [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
+- **Spec & implementation plan**: [`docs/superpowers/`](docs/superpowers/)
+
+## Lưu ý pháp lý
+Scrape LinkedIn vi phạm **ToS** của LinkedIn; email/PII dính **GDPR** — cân nhắc kỹ khi dùng
+thương mại. Ưu tiên giải pháp **không cần cookie** để tránh khóa tài khoản cá nhân.

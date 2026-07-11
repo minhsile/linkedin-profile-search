@@ -24,7 +24,7 @@
 <div class="cards" id="cards"></div>
 <h2>Runs</h2>
 <table id="runs"><thead><tr><th>Started</th><th>Status</th><th>Fetched</th><th>Inserted</th><th>Enriched</th><th>Unchanged</th><th>Errors</th></tr></thead><tbody></tbody></table>
-<h2>Throughput <span id="chartTitle" class="muted"></span></h2>
+<h2>Throughput — tốc độ Apify cào <span id="chartTitle" class="muted"></span></h2>
 <canvas id="chart" width="900" height="320"></canvas>
 <div id="noMetrics" class="muted"></div>
 <script>
@@ -59,8 +59,8 @@ function draw(m){
   const ctx=document.getElementById('chart');
   if(chart)chart.destroy();
   chart=new Chart(ctx,{type:'line',data:{labels:m.map(p=>p.processed),
-    datasets:[{label:'profiles/sec',data:m.map(p=>p.rate_per_sec),borderColor:'#D97757',backgroundColor:'rgba(217,119,87,.1)',fill:true,tension:.3}]},
-    options:{scales:{x:{title:{display:true,text:'processed'}},y:{title:{display:true,text:'rate/sec'},beginAtZero:true}}}});
+    datasets:[{label:'Apify cào (profiles/giây)',data:m.map(p=>p.rate_per_sec),borderColor:'#D97757',backgroundColor:'rgba(217,119,87,.1)',fill:true,tension:.3}]},
+    options:{scales:{x:{title:{display:true,text:'số profile đã cào'}},y:{title:{display:true,text:'profiles/giây'},beginAtZero:true}}}});
 }
 load();setInterval(load,5000);
 </script>

@@ -5,11 +5,35 @@ from lps.ingest import ingest_profile
 
 log = logging.getLogger("lps.runner")
 
+_TERMINAL = {"SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT", "TIMED_OUT"}
 
-def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=10, now=time.monotonic):
+
+def _zero():
+    return {"fetched": 0, "inserted": 0, "enriched": 0, "unchanged": 0, "errors": 0}
+
+
+def run_crawl(conn, adapter, run_input, token, *, run_id=None,
+              poll_every=2.0, now=time.monotonic, sleep=time.sleep):
+    """
+    Giai đoạn 1 (chỉ khi crawl mới): khởi động actor async + poll số item Apify cào được
+      theo thời gian -> ghi run_metric = TỐC ĐỘ APIFY CÀO (profiles/giây).
+    Giai đoạn 2: ingest toàn bộ dataset + dedup (không ghi vào chart throughput).
+    """
     if run_id is None:
         apify_run_id, dataset_id = adapter.start_run(run_input, token)
         run_id = create_run(conn, adapter.name, run_input, apify_run_id, dataset_id)
+        start = now()
+        status = "RUNNING"
+        while True:
+            status, count = adapter.poll(apify_run_id, dataset_id, token)
+            elapsed = max(now() - start, 1e-9)
+            record_metric(conn, run_id, count, 0, 0, 0, count / elapsed)
+            if status in _TERMINAL:
+                break
+            sleep(poll_every)
+        if status != "SUCCEEDED":
+            finish_run(conn, run_id, "failed", _zero())
+            raise RuntimeError(f"Apify run kết thúc với status {status}")
         offset = 0
     else:
         run = get_run(conn, run_id)
@@ -18,15 +42,7 @@ def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=10, 
         dataset_id = run["dataset_id"]
         offset = run["checkpoint"].get("offset", 0)
 
-    totals = {"fetched": 0, "inserted": 0, "enriched": 0, "unchanged": 0, "errors": 0}
-    start = now()
-    processed = 0
-
-    def _emit_metric():
-        elapsed = max(now() - start, 1e-9)
-        record_metric(conn, run_id, processed, totals["inserted"],
-                      totals["enriched"], totals["errors"], processed / elapsed)
-
+    totals = _zero()
     try:
         for raw in adapter.iter_items(dataset_id, token, offset=offset):
             totals["fetched"] += 1
@@ -37,14 +53,7 @@ def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=10, 
                 conn.rollback()
                 totals["errors"] += 1
                 log.exception("ingest failed for item at offset %s", offset)
-            processed += 1
             offset += 1
-            if processed % metric_every == 0:
-                set_checkpoint(conn, run_id, offset)
-                _emit_metric()
-        # luôn ghi 1 điểm metric cuối cùng (kể cả run ngắn < metric_every)
-        if processed and processed % metric_every != 0:
-            _emit_metric()
         set_checkpoint(conn, run_id, offset)
         finish_run(conn, run_id, "succeeded", totals)
     except Exception:

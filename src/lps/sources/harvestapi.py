@@ -6,12 +6,10 @@ from lps.normalize import normalize_slug
 
 ACTOR_ID = "harvestapi/linkedin-profile-search"
 
-# Các key thường gặp khi 1 field text bị bọc trong dict (harvestapi trả location/company... dạng object)
 _TEXT_KEYS = ("linkedinText", "text", "name", "title", "position", "city", "countryFull", "default")
 
 
 def _text(v):
-    """Ép field (str | dict | khác) về string hiển thị, hoặc None."""
     if v is None or isinstance(v, str):
         return v or None
     if isinstance(v, dict):
@@ -24,7 +22,6 @@ def _text(v):
 
 
 def _int(v):
-    """Ép field số (int | '500+' | None) về int, hoặc None."""
     if isinstance(v, bool):
         return None
     if isinstance(v, int):
@@ -39,11 +36,19 @@ class HarvestApiSource:
     name = "harvestapi"
 
     def start_run(self, run_input: dict, token: str) -> tuple[str, str]:
+        """Khởi động actor BẤT ĐỒNG BỘ (không chờ cào xong) để còn theo dõi throughput."""
         client = ApifyClient(token)
-        run = client.actor(ACTOR_ID).call(run_input=run_input)
-        if not run or run.get("status") != "SUCCEEDED":
-            raise RuntimeError(f"Apify run failed: {run.get('status') if run else None}")
+        run = client.actor(ACTOR_ID).start(run_input=run_input)
         return run["id"], run["defaultDatasetId"]
+
+    def poll(self, apify_run_id: str, dataset_id: str, token: str) -> tuple[str, int]:
+        """Trả (status, số_item_đã_cào) để đo tốc độ Apify cào theo thời gian."""
+        client = ApifyClient(token)
+        run = client.run(apify_run_id).get()
+        status = (run or {}).get("status", "RUNNING")
+        ds = client.dataset(dataset_id).get()
+        count = (ds or {}).get("itemCount", 0) or 0
+        return status, count
 
     def iter_items(self, dataset_id: str, token: str, offset: int = 0) -> Iterator[dict]:
         client = ApifyClient(token)

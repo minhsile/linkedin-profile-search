@@ -1,0 +1,14 @@
+# Secrets
+.env
+*.token
+
+# Output data
+output/
+*.csv
+*.json.tmp
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

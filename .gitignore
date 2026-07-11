@@ -12,3 +12,13 @@ output/
 Thumbs.db
 .idea/
 .vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Local user config (keep config.example.json only)
+config.json

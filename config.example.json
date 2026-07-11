@@ -1,0 +1,10 @@
+{
+  "profileScraperMode": "Full",
+  "searchQuery": "Marketing Manager",
+  "currentJobTitles": ["Marketing Manager"],
+  "locations": ["Ho Chi Minh City"],
+  "currentCompanies": [],
+  "industryIds": [],
+  "maxItems": 50,
+  "startPage": 1
+}

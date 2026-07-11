@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>LPS Dashboard</title>
+<script src="/static/vendor/chart.umd.js"></script>
+<style>
+  body{font-family:system-ui,sans-serif;background:#FAF9F5;color:#3D3D3A;margin:0;padding:32px;}
+  h1{font-size:24px;color:#141413;}
+  .cards{display:flex;gap:16px;margin:20px 0;flex-wrap:wrap;}
+  .card{background:#fff;border:1px solid #D1CFC5;border-radius:12px;padding:16px 20px;min-width:140px;}
+  .card .k{font-size:12px;color:#87867F;text-transform:uppercase;}
+  .card .v{font-size:28px;color:#141413;font-weight:600;}
+  table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #D1CFC5;border-radius:8px;overflow:hidden;}
+  th,td{padding:8px 12px;border-bottom:1px solid #eee;text-align:left;font-size:13px;}
+  th{background:#F0EEE6;}
+  canvas{background:#fff;border:1px solid #D1CFC5;border-radius:12px;padding:12px;margin-top:16px;max-width:900px;}
+</style>
+</head>
+<body>
+<h1>LinkedIn Profile Crawl — Dashboard</h1>
+<div class="cards" id="cards"></div>
+<h2>Runs</h2>
+<table id="runs"><thead><tr><th>Started</th><th>Status</th><th>Fetched</th><th>Inserted</th><th>Enriched</th><th>Unchanged</th><th>Errors</th></tr></thead><tbody></tbody></table>
+<h2>Throughput (run mới nhất)</h2>
+<canvas id="chart" width="900" height="320"></canvas>
+<script>
+async function j(u){const r=await fetch(u);return r.json();}
+async function load(){
+  const s=await j('/api/stats');
+  document.getElementById('cards').innerHTML=
+    card('Total persons',s.persons)+card('Needs review',s.needs_review)+
+    Object.entries(s.by_source).map(([k,v])=>card('src: '+k,v)).join('');
+  const runs=await j('/api/runs');
+  document.querySelector('#runs tbody').innerHTML=runs.map(r=>
+    `<tr><td>${r.started_at||''}</td><td>${r.status}</td><td>${r.fetched}</td><td>${r.inserted}</td><td>${r.enriched}</td><td>${r.unchanged}</td><td>${r.errors}</td></tr>`).join('');
+  if(runs.length){
+    const m=await j('/api/runs/'+runs[0].id+'/metrics');
+    draw(m);
+  }
+}
+function card(k,v){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;}
+let chart;
+function draw(m){
+  const ctx=document.getElementById('chart');
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{type:'line',data:{labels:m.map(p=>p.processed),
+    datasets:[{label:'profiles/sec',data:m.map(p=>p.rate_per_sec),borderColor:'#D97757',tension:.3}]},
+    options:{scales:{x:{title:{display:true,text:'processed'}},y:{title:{display:true,text:'rate/sec'}}}}});
+}
+load();setInterval(load,5000);
+</script>
+</body>
+</html>

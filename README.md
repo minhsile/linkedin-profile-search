@@ -51,3 +51,18 @@ linkedin-profile-search/
 - Scrape LinkedIn vi phạm **Điều khoản dịch vụ (ToS)** của LinkedIn.
 - Lấy email/SĐT dính **GDPR / luật bảo vệ dữ liệu cá nhân** — cân nhắc kỹ khi dùng thương mại.
 - Ưu tiên giải pháp **không cần cookie** để tránh nguy cơ bị khóa tài khoản cá nhân.
+
+## Chạy pipeline
+
+1. `conda create -n lps python=3.12 -y && conda activate lps`
+2. `pip install -r requirements.txt && pip install -e .`
+3. `docker compose up -d`   # Postgres 16 tại localhost:5433
+4. `cp .env.example .env`   # điền APIFY_TOKEN
+5. `python -m lps.cli migrate`
+6. `cp config.example.json config.json`  # sửa filter
+7. `python -m lps.cli crawl --config config.json`
+8. `uvicorn dashboard.app:app --port 8000`  # dashboard tại http://localhost:8000
+9. `python -m lps.cli status`  # xem thống kê run
+
+Chi tiết vận hành/resume: xem `docs/RUNBOOK.md`.
+Kiến trúc & spec: `docs/superpowers/specs/`, kế hoạch: `docs/superpowers/plans/`.

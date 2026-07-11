@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    container_name: lps_pg
+    environment:
+      POSTGRES_USER: lps
+      POSTGRES_PASSWORD: lps
+      POSTGRES_DB: lps
+    ports:
+      - "5433:5432"
+    volumes:
+      - lps_pgdata:/var/lib/postgresql/data
+volumes:
+  lps_pgdata:

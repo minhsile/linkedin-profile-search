@@ -1,0 +1,75 @@
+import json
+from lps.models import CanonicalProfile
+from lps.normalize import normalize_slug, normalize_text, content_hash
+from lps.db import get_person_by_slug, insert_person, update_person, SCALAR_COLUMNS
+
+
+def _dedup_list(items: list) -> list:
+    seen, out = set(), []
+    for it in items:
+        key = json.dumps(it, sort_keys=True, ensure_ascii=False, default=str)
+        if key not in seen:
+            seen.add(key)
+            out.append(it)
+    return out
+
+
+def deep_merge_data(existing: dict, incoming: dict) -> dict:
+    out = dict(existing)
+    for k, v in incoming.items():
+        if isinstance(v, list) and isinstance(out.get(k), list):
+            out[k] = _dedup_list(out[k] + v)
+        elif isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = deep_merge_data(out[k], v)
+        elif k not in out or out[k] in (None, "", [], {}):
+            out[k] = v
+    return out
+
+
+def _empty(x) -> bool:
+    return x is None or x == "" or x == [] or x == {}
+
+
+def merge_scalars(row: dict, profile: CanonicalProfile) -> dict:
+    out = {}
+    for col in SCALAR_COLUMNS:
+        if col == "linkedin_slug":
+            continue
+        new = getattr(profile, col)
+        if _empty(row.get(col)) and not _empty(new):
+            out[col] = new
+    return out
+
+
+def ingest_profile(conn, profile: CanonicalProfile) -> str:
+    slug = profile.linkedin_slug or normalize_slug(profile.linkedin_url)
+    profile.linkedin_slug = slug
+    chash = content_hash(profile.raw or profile.data)
+    norm_name = normalize_text(profile.full_name)
+    norm_company = normalize_text(profile.current_company)
+
+    if not slug:
+        insert_person(conn, profile, needs_review=True, content_hash=chash,
+                      norm_name=norm_name, norm_company=norm_company)
+        conn.commit()
+        return "needs_review"
+
+    row = get_person_by_slug(conn, slug)
+    if row is None:
+        insert_person(conn, profile, needs_review=False, content_hash=chash,
+                      norm_name=norm_name, norm_company=norm_company)
+        conn.commit()
+        return "inserted"
+
+    hashes = dict(row["source_hashes"])
+    if hashes.get(profile.source) == chash:
+        return "unchanged"
+
+    merged_data = deep_merge_data(row["data"], profile.data)
+    scalars = merge_scalars(row, profile)
+    sources = list(dict.fromkeys(list(row["sources"]) + [profile.source]))
+    hashes[profile.source] = chash
+    update_person(conn, row["id"], scalars=scalars, data=merged_data,
+                  sources=sources, source_hashes=hashes)
+    conn.commit()
+    return "enriched"

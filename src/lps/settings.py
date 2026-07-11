@@ -19,6 +19,14 @@ def load_settings() -> Settings:
     return Settings(database_url=url, apify_token=os.environ.get("APIFY_TOKEN"))
 
 
-def load_search_config(path: str) -> dict:
+def load_search_config(path: str):
+    """Trả về nội dung JSON: 1 object (dict) hoặc danh sách object (list)."""
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def normalize_configs(raw) -> list[dict]:
+    """Chuẩn hóa về LIST config. Cho phép file là 1 object hoặc 1 array object."""
+    if isinstance(raw, list):
+        return raw
+    return [raw]

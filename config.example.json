@@ -1,10 +1,22 @@
 {
   "profileScraperMode": "Full",
-  "searchQuery": "Marketing Manager",
-  "currentJobTitles": ["Marketing Manager"],
+  "searchQuery": "Data Engineer",
+  "currentJobTitles": ["Data Engineer"],
+  "pastJobTitles": [],
   "locations": ["Ho Chi Minh City"],
+  "excludeLocations": [],
   "currentCompanies": [],
+  "pastCompanies": [],
+  "schools": [],
   "industryIds": [],
-  "maxItems": 50,
-  "startPage": 1
+  "functionIds": [],
+  "seniorityLevelIds": [],
+  "yearsOfExperienceIds": [],
+  "yearsAtCurrentCompanyIds": [],
+  "companyHeadcount": [],
+  "profileLanguages": [],
+  "recentlyChangedJobs": false,
+  "maxItems": 100,
+  "startPage": 1,
+  "takePages": 4
 }

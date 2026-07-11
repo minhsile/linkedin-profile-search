@@ -1,6 +1,7 @@
 services:
   db:
-    image: postgres:16
+    build: .
+    image: lps-postgres:16
     container_name: lps_pg
     environment:
       POSTGRES_USER: lps

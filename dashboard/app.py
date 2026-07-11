@@ -1,17 +1,24 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg.rows import dict_row
 from lps.db import connect
 
+# nạp .env ở gốc repo để có DATABASE_URL khi chạy uvicorn (không override env đã set sẵn)
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 app = FastAPI(title="LPS Dashboard")
 STATIC = Path(__file__).parent / "static"
 
 
 def _dsn() -> str:
-    return os.environ["DATABASE_URL"]
+    dsn = os.environ.get("DATABASE_URL")
+    if not dsn:
+        raise RuntimeError("DATABASE_URL chưa được set (tạo .env từ .env.example)")
+    return dsn
 
 
 @app.get("/api/stats")

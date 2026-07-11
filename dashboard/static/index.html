@@ -7,6 +7,7 @@
 <style>
   body{font-family:system-ui,sans-serif;background:#FAF9F5;color:#3D3D3A;margin:0;padding:32px;}
   h1{font-size:24px;color:#141413;}
+  h2{font-size:16px;color:#141413;margin-top:28px;}
   .cards{display:flex;gap:16px;margin:20px 0;flex-wrap:wrap;}
   .card{background:#fff;border:1px solid #D1CFC5;border-radius:12px;padding:16px 20px;min-width:140px;}
   .card .k{font-size:12px;color:#87867F;text-transform:uppercase;}
@@ -14,7 +15,8 @@
   table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #D1CFC5;border-radius:8px;overflow:hidden;}
   th,td{padding:8px 12px;border-bottom:1px solid #eee;text-align:left;font-size:13px;}
   th{background:#F0EEE6;}
-  canvas{background:#fff;border:1px solid #D1CFC5;border-radius:12px;padding:12px;margin-top:16px;max-width:900px;}
+  canvas{background:#fff;border:1px solid #D1CFC5;border-radius:12px;padding:12px;margin-top:12px;max-width:900px;}
+  .muted{color:#87867F;font-size:13px;}
 </style>
 </head>
 <body>
@@ -22,8 +24,9 @@
 <div class="cards" id="cards"></div>
 <h2>Runs</h2>
 <table id="runs"><thead><tr><th>Started</th><th>Status</th><th>Fetched</th><th>Inserted</th><th>Enriched</th><th>Unchanged</th><th>Errors</th></tr></thead><tbody></tbody></table>
-<h2>Throughput (run mới nhất)</h2>
+<h2>Throughput <span id="chartTitle" class="muted"></span></h2>
 <canvas id="chart" width="900" height="320"></canvas>
+<div id="noMetrics" class="muted"></div>
 <script>
 async function j(u){const r=await fetch(u);return r.json();}
 async function load(){
@@ -34,9 +37,20 @@ async function load(){
   const runs=await j('/api/runs');
   document.querySelector('#runs tbody').innerHTML=runs.map(r=>
     `<tr><td>${r.started_at||''}</td><td>${r.status}</td><td>${r.fetched}</td><td>${r.inserted}</td><td>${r.enriched}</td><td>${r.unchanged}</td><td>${r.errors}</td></tr>`).join('');
-  if(runs.length){
-    const m=await j('/api/runs/'+runs[0].id+'/metrics');
-    draw(m);
+  // chọn run mới nhất CÓ metric để vẽ throughput
+  let drawn=false;
+  for(const r of runs){
+    const m=await j('/api/runs/'+r.id+'/metrics');
+    if(m.length){
+      draw(m);
+      document.getElementById('chartTitle').textContent='(run '+r.id.slice(0,8)+' · '+(r.started_at||'')+')';
+      document.getElementById('noMetrics').textContent='';
+      drawn=true; break;
+    }
+  }
+  if(!drawn){
+    document.getElementById('chartTitle').textContent='';
+    document.getElementById('noMetrics').textContent='Chưa có dữ liệu throughput (chạy 1 crawl để sinh metric).';
   }
 }
 function card(k,v){return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;}
@@ -45,8 +59,8 @@ function draw(m){
   const ctx=document.getElementById('chart');
   if(chart)chart.destroy();
   chart=new Chart(ctx,{type:'line',data:{labels:m.map(p=>p.processed),
-    datasets:[{label:'profiles/sec',data:m.map(p=>p.rate_per_sec),borderColor:'#D97757',tension:.3}]},
-    options:{scales:{x:{title:{display:true,text:'processed'}},y:{title:{display:true,text:'rate/sec'}}}}});
+    datasets:[{label:'profiles/sec',data:m.map(p=>p.rate_per_sec),borderColor:'#D97757',backgroundColor:'rgba(217,119,87,.1)',fill:true,tension:.3}]},
+    options:{scales:{x:{title:{display:true,text:'processed'}},y:{title:{display:true,text:'rate/sec'},beginAtZero:true}}}});
 }
 load();setInterval(load,5000);
 </script>

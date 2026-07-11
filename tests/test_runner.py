@@ -49,3 +49,13 @@ def test_run_crawl_resumes_from_checkpoint(conn):
     t2 = run_crawl(conn, FakeAdapter(items), {}, "tok",
                    run_id=t1["run_id"], now=lambda: next(ticks))
     assert t2["fetched"] == 0
+
+
+def test_run_crawl_records_at_least_one_metric_for_short_run(conn):
+    items = [{"slug": f"p{i}", "name": f"N{i}", "company": "X"} for i in range(3)]
+    ticks = count(0, 1)
+    t = run_crawl(conn, FakeAdapter(items), {}, "tok",
+                  metric_every=10, now=lambda: next(ticks))
+    with conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM run_metric WHERE run_id = %s", (t["run_id"],))
+        assert cur.fetchone()[0] >= 1

@@ -6,7 +6,7 @@ from lps.ingest import ingest_profile
 log = logging.getLogger("lps.runner")
 
 
-def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=50, now=time.monotonic):
+def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=10, now=time.monotonic):
     if run_id is None:
         apify_run_id, dataset_id = adapter.start_run(run_input, token)
         run_id = create_run(conn, adapter.name, run_input, apify_run_id, dataset_id)
@@ -21,6 +21,12 @@ def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=50, 
     totals = {"fetched": 0, "inserted": 0, "enriched": 0, "unchanged": 0, "errors": 0}
     start = now()
     processed = 0
+
+    def _emit_metric():
+        elapsed = max(now() - start, 1e-9)
+        record_metric(conn, run_id, processed, totals["inserted"],
+                      totals["enriched"], totals["errors"], processed / elapsed)
+
     try:
         for raw in adapter.iter_items(dataset_id, token, offset=offset):
             totals["fetched"] += 1
@@ -34,10 +40,11 @@ def run_crawl(conn, adapter, run_input, token, *, run_id=None, metric_every=50, 
             processed += 1
             offset += 1
             if processed % metric_every == 0:
-                elapsed = max(now() - start, 1e-9)
                 set_checkpoint(conn, run_id, offset)
-                record_metric(conn, run_id, processed, totals["inserted"],
-                              totals["enriched"], totals["errors"], processed / elapsed)
+                _emit_metric()
+        # luôn ghi 1 điểm metric cuối cùng (kể cả run ngắn < metric_every)
+        if processed and processed % metric_every != 0:
+            _emit_metric()
         set_checkpoint(conn, run_id, offset)
         finish_run(conn, run_id, "succeeded", totals)
     except Exception:

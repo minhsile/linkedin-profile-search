@@ -16,10 +16,11 @@ slug, chỉ enrich chứ không nhân bản), có **job runner resume** + **dash
 ## Chạy nhanh (Quickstart)
 
 ```bash
-# 1) Môi trường
+# 1) Môi trường (Python 3.12 qua uv)
+conda deactivate 2>/dev/null           # nếu đang ở conda base — nếu không uv sẽ cài nhầm vào python conda
 uv venv --python 3.12 .venv
+uv pip install --python .venv/Scripts/python.exe -r requirements.txt -e .
 source .venv/Scripts/activate          # Git Bash  |  PowerShell: .venv\Scripts\Activate.ps1
-uv pip install -r requirements.txt -e .
 
 # 2) Database
 docker compose up -d                    # Postgres 16 @ localhost:5433

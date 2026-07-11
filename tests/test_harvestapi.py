@@ -26,3 +26,30 @@ def test_normalize_handles_missing_url():
     p = src.normalize({"firstName": "Bich", "lastName": "Tran"})
     assert p.linkedin_slug is None
     assert p.full_name == "Bich Tran"
+
+
+def test_normalize_coerces_dict_location():
+    src = HarvestApiSource()
+    raw = {
+        "firstName": "An",
+        "lastName": "Nguyen",
+        "linkedinUrl": "https://www.linkedin.com/in/an-nguyen-123/",
+        "location": {"linkedinText": "Ho Chi Minh City", "city": "Ho Chi Minh City",
+                     "countryFull": "Vietnam"},
+        "connections": "500+",
+    }
+    p = src.normalize(raw)
+    assert p.location == "Ho Chi Minh City"
+    assert p.country == "Vietnam"
+    assert p.connections == 500
+
+
+def test_normalize_coerces_dict_company():
+    src = HarvestApiSource()
+    raw = {
+        "linkedinUrl": "https://www.linkedin.com/in/x-y-1/",
+        "experience": [{"companyName": {"name": "Grab"}, "position": "PM"}],
+    }
+    p = src.normalize(raw)
+    assert p.current_company == "Grab"
+    assert p.current_title == "PM"

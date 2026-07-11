@@ -61,3 +61,5 @@ xem file riêng: `industry_codes.md` / `industry_codes.json` (433 mã).
 | 43 | Financial Services (Capital Markets nhánh riêng: 129) |
 | 1594 | Accounting |
 | 104 | Staffing and Recruiting |
+
+> **Lưu ý kiểu dữ liệu:** trong config.json các field `*Ids` để dạng **chuỗi** (vd `["120","130"]`, `["4"]`). Pipeline tự ép số -> chuỗi nếu bạn lỡ viết `[120,130]`, nên cả hai đều chạy.

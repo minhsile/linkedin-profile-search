@@ -32,13 +32,23 @@ def _int(v):
     return None
 
 
+def _sanitize_run_input(run_input: dict) -> dict:
+    """Actor yêu cầu các field ID (industryIds, seniorityLevelIds, functionIds,
+    yearsOfExperienceIds...) là mảng STRING. Cho phép user viết số -> tự ép sang string."""
+    out = dict(run_input)
+    for k, v in list(out.items()):
+        if k.endswith("Ids") and isinstance(v, list):
+            out[k] = [str(x) for x in v]
+    return out
+
+
 class HarvestApiSource:
     name = "harvestapi"
 
     def start_run(self, run_input: dict, token: str) -> tuple[str, str]:
         """Khởi động actor BẤT ĐỒNG BỘ (không chờ cào xong) để còn theo dõi throughput."""
         client = ApifyClient(token)
-        run = client.actor(ACTOR_ID).start(run_input=run_input)
+        run = client.actor(ACTOR_ID).start(run_input=_sanitize_run_input(run_input))
         return run["id"], run["defaultDatasetId"]
 
     def poll(self, apify_run_id: str, dataset_id: str, token: str) -> tuple[str, int]:

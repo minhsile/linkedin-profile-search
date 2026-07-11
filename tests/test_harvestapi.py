@@ -1,4 +1,4 @@
-from lps.sources.harvestapi import HarvestApiSource
+from lps.sources.harvestapi import HarvestApiSource, _sanitize_run_input
 
 
 def test_normalize_maps_core_fields():
@@ -53,3 +53,18 @@ def test_normalize_coerces_dict_company():
     p = src.normalize(raw)
     assert p.current_company == "Grab"
     assert p.current_title == "PM"
+
+
+def test_sanitize_stringifies_id_fields():
+    out = _sanitize_run_input({
+        "seniorityLevelIds": [120, 130],
+        "industryIds": [4],
+        "yearsOfExperienceIds": [3, 4],
+        "locations": ["Ho Chi Minh City"],
+        "maxItems": 100,
+    })
+    assert out["seniorityLevelIds"] == ["120", "130"]
+    assert out["industryIds"] == ["4"]
+    assert out["yearsOfExperienceIds"] == ["3", "4"]
+    assert out["locations"] == ["Ho Chi Minh City"]  # không đụng field khác
+    assert out["maxItems"] == 100

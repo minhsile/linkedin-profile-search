@@ -4,7 +4,7 @@
     "searchQuery": "Data Engineer",
     "currentJobTitles": ["Data Engineer", "Senior Data Engineer"],
     "locations": ["Ho Chi Minh City"],
-    "industryIds": [4],
+    "industryIds": ["4"],
     "maxItems": 100,
     "startPage": 1,
     "takePages": 4
@@ -23,7 +23,7 @@
     "searchQuery": "Backend Engineer",
     "currentJobTitles": ["Backend Engineer", "Software Engineer"],
     "locations": ["Da Nang"],
-    "seniorityLevelIds": [120, 130],
+    "seniorityLevelIds": ["120", "130"],
     "maxItems": 50,
     "startPage": 1,
     "takePages": 2

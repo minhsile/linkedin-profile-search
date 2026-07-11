@@ -112,3 +112,5 @@ python -m lps.cli crawl --config config.json
 ```
 Output in tiến độ từng bộ `[1/2] ... [2/2] ...` + dòng **TỔNG** cuối. Xem mẫu ở
 `config.batch.example.json`. (Mỗi bộ là 1 actor run → tính phí Apify riêng cho mỗi bộ.)
+
+> Các field `*Ids` gửi cho actor phải là **mảng chuỗi**. Pipeline tự động ép số sang chuỗi, nên `[4]` hay `["4"]` đều được.

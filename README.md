@@ -54,7 +54,7 @@ linkedin-profile-search/
 
 ## Chạy pipeline
 
-1. `conda create -n lps python=3.12 -y && conda activate lps`
+1. Tạo & kích hoạt venv (cần Python 3.12): `python -m venv .venv` → `source .venv/Scripts/activate` (Git Bash) hoặc `.venv\Scripts\Activate.ps1` (PowerShell)
 2. `pip install -r requirements.txt && pip install -e .`
 3. `docker compose up -d`   # Postgres 16 tại localhost:5433
 4. `cp .env.example .env`   # điền APIFY_TOKEN

@@ -54,8 +54,8 @@ linkedin-profile-search/
 
 ## Chạy pipeline
 
-1. Tạo & kích hoạt venv (cần Python 3.12): `python -m venv .venv` → `source .venv/Scripts/activate` (Git Bash) hoặc `.venv\Scripts\Activate.ps1` (PowerShell)
-2. `pip install -r requirements.txt && pip install -e .`
+1. Tạo venv Python 3.12 bằng uv: `uv venv --python 3.12 .venv` (uv tự tải CPython 3.12 standalone). Kích hoạt: `source .venv/Scripts/activate` (Git Bash) hoặc `.venv\Scripts\Activate.ps1` (PowerShell). *(Cài uv 1 lần: `pip install uv`.)*
+2. `uv pip install -r requirements.txt -e .`
 3. `docker compose up -d`   # Postgres 16 tại localhost:5433
 4. `cp .env.example .env`   # điền APIFY_TOKEN
 5. `python -m lps.cli migrate`

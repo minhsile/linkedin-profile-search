@@ -1,4 +1,6 @@
 services:
+  # Mặc định: Postgres build từ Dockerfile (official postgres:16 + tzdata-legacy).
+  # tzdata-legacy fix lỗi FATAL invalid TimeZone "Asia/Saigon" khi DBeaver (locale VN) connect.
   db:
     build: .
     image: lps-postgres:16
@@ -11,5 +13,26 @@ services:
       - "5433:5432"
     volumes:
       - lps_pgdata:/var/lib/postgresql/data
+
+  # Bản chạy THẲNG official image postgres:16 (không build, khởi động nhanh).
+  # Chỉ chạy khi bật profile: `docker compose --profile official up -d db-official`
+  # Lưu ý: official image KHÔNG có tzdata-legacy -> nếu client gửi timezone cũ
+  # "Asia/Saigon" khi handshake sẽ lỗi; đặt PGTZ=UTC để ép server dùng UTC né lỗi đó.
+  db-official:
+    image: postgres:16
+    container_name: lps_pg_official
+    profiles: ["official"]
+    environment:
+      POSTGRES_USER: lps
+      POSTGRES_PASSWORD: lps
+      POSTGRES_DB: lps
+      PGTZ: UTC
+      TZ: UTC
+    ports:
+      - "5434:5432"
+    volumes:
+      - lps_pgdata_official:/var/lib/postgresql/data
+
 volumes:
   lps_pgdata:
+  lps_pgdata_official:

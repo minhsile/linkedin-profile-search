@@ -23,7 +23,9 @@ uv pip install --python .venv/Scripts/python.exe -e .
 source .venv/Scripts/activate          # Git Bash  |  PowerShell: .venv\Scripts\Activate.ps1
 
 # 2) Database
-docker compose up -d                    # Postgres 16 @ localhost:5433
+docker compose up -d                    # Postgres 16 (build + tzdata-legacy) @ localhost:5433
+# hoac ban official image thuan (khong build, @ localhost:5434):
+# docker compose --profile official up -d db-official
 
 # 3) Cấu hình + tạo schema
 cp .env.example .env                     # điền APIFY_TOKEN

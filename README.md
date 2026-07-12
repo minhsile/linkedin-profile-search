@@ -51,18 +51,11 @@ Trong lúc crawl, mỗi vài giây terminal in dòng `Apify cào: N profiles (X/
 — chính là tốc độ Apify cào dataset theo thời gian thực. Khi xong chuyển sang bước ingest/dedup
 và in tổng kết `fetched / inserted / enriched / unchanged / errors`.
 
-## Test
-
-```bash
-python -m pytest -q        # cần Docker Postgres đang chạy
-```
-
 ## Cấu trúc
 
 ```
 src/lps/          settings · normalize · models · db · ingest · runner · cli · sources/
 db/migrations/    SQL schema
-tests/            unit + tích hợp DB
 docs/             research-comparison.md · CONFIG.md · dictionaries/ · superpowers/{specs,plans}
 ```
 

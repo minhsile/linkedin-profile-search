@@ -1,6 +1,6 @@
 import time
 import logging
-from lps.db import create_run, set_checkpoint, record_metric, finish_run, get_run
+from lps.db import create_run, set_checkpoint, finish_run, get_run
 from lps.ingest import ingest_profile
 
 log = logging.getLogger("lps.runner")
@@ -12,12 +12,17 @@ def _zero():
     return {"fetched": 0, "inserted": 0, "enriched": 0, "unchanged": 0, "errors": 0}
 
 
+def _print_progress(count, rate, status):
+    print(f"    Apify cao: {count} profiles ({rate:.1f}/s) [{status}]")
+
+
 def run_crawl(conn, adapter, run_input, token, *, run_id=None,
-              poll_every=2.0, now=time.monotonic, sleep=time.sleep):
+              poll_every=2.0, now=time.monotonic, sleep=time.sleep,
+              on_progress=_print_progress):
     """
-    Giai đoạn 1 (chỉ khi crawl mới): khởi động actor async + poll số item Apify cào được
-      theo thời gian -> ghi run_metric = TỐC ĐỘ APIFY CÀO (profiles/giây).
-    Giai đoạn 2: ingest toàn bộ dataset + dedup (không ghi vào chart throughput).
+    Giai doan 1 (chi khi crawl moi): khoi dong actor async + poll so item Apify
+      cao duoc theo thoi gian, in tien do ra terminal qua on_progress.
+    Giai doan 2: ingest toan bo dataset + dedup.
     """
     if run_id is None:
         apify_run_id, dataset_id = adapter.start_run(run_input, token)
@@ -27,13 +32,13 @@ def run_crawl(conn, adapter, run_input, token, *, run_id=None,
         while True:
             status, count = adapter.poll(apify_run_id, dataset_id, token)
             elapsed = max(now() - start, 1e-9)
-            record_metric(conn, run_id, count, 0, 0, 0, count / elapsed)
+            on_progress(count, count / elapsed, status)
             if status in _TERMINAL:
                 break
             sleep(poll_every)
         if status != "SUCCEEDED":
             finish_run(conn, run_id, "failed", _zero())
-            raise RuntimeError(f"Apify run kết thúc với status {status}")
+            raise RuntimeError(f"Apify run ket thuc voi status {status}")
         offset = 0
     else:
         run = get_run(conn, run_id)

@@ -46,18 +46,6 @@ CREATE TABLE IF NOT EXISTS crawl_run (
     finished_at   timestamptz
 );
 
-CREATE TABLE IF NOT EXISTS run_metric (
-    id           bigserial PRIMARY KEY,
-    run_id       uuid NOT NULL REFERENCES crawl_run(id) ON DELETE CASCADE,
-    ts           timestamptz NOT NULL DEFAULT now(),
-    processed    int NOT NULL,
-    inserted     int NOT NULL,
-    enriched     int NOT NULL,
-    errors       int NOT NULL,
-    rate_per_sec double precision NOT NULL
-);
-CREATE INDEX IF NOT EXISTS run_metric_run_idx ON run_metric (run_id, ts);
-
 CREATE TABLE IF NOT EXISTS schema_migrations (
     filename   text PRIMARY KEY,
     applied_at timestamptz NOT NULL DEFAULT now()

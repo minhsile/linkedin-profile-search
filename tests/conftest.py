@@ -26,7 +26,7 @@ def admin_conn():
     conn = psycopg.connect(TEST_DSN, autocommit=True)
     with conn.cursor() as cur:
         cur.execute(
-            "DROP TABLE IF EXISTS run_metric, crawl_run, person, schema_migrations CASCADE"
+            "DROP TABLE IF EXISTS crawl_run, person, schema_migrations CASCADE"
         )
     yield conn
     conn.close()

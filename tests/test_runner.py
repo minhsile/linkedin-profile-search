@@ -11,7 +11,7 @@ class FakeAdapter:
 
     def __init__(self, items, poll_sequence=None):
         self._items = items
-        # danh sách (status, count) trả dần mỗi lần poll; mặc định: xong ngay
+        # danh sach (status, count) tra dan moi lan poll; mac dinh: xong ngay
         self._polls = poll_sequence or [("SUCCEEDED", len(items))]
         self._i = 0
 
@@ -42,7 +42,8 @@ def test_run_crawl_counts_outcomes(conn):
     ]
     ticks = count(1, 1)
     totals = run_crawl(conn, FakeAdapter(items), {"maxItems": 3}, "tok",
-                       poll_every=0, now=lambda: next(ticks), sleep=NOOP)
+                       poll_every=0, now=lambda: next(ticks), sleep=NOOP,
+                       on_progress=NOOP)
     assert totals["fetched"] == 3
     assert totals["inserted"] == 2
     assert totals["unchanged"] == 1
@@ -56,21 +57,22 @@ def test_run_crawl_resumes_from_checkpoint(conn):
              {"slug": "b", "name": "B", "company": "Y"}]
     ticks = count(1, 1)
     t1 = run_crawl(conn, FakeAdapter(items), {}, "tok",
-                   poll_every=0, now=lambda: next(ticks), sleep=NOOP)
+                   poll_every=0, now=lambda: next(ticks), sleep=NOOP, on_progress=NOOP)
     t2 = run_crawl(conn, FakeAdapter(items), {}, "tok",
-                   run_id=t1["run_id"], now=lambda: next(ticks))
+                   run_id=t1["run_id"], now=lambda: next(ticks), on_progress=NOOP)
     assert t2["fetched"] == 0
 
 
-def test_crawl_monitor_records_crawl_rate(conn):
+def test_crawl_reports_progress_each_poll(conn):
+    # poll loop cho actor cao xong (SUCCEEDED) roi moi ingest; on_progress goi moi lan poll
     items = [{"slug": f"p{i}", "name": f"N{i}", "company": "X"} for i in range(3)]
     polls = [("RUNNING", 1), ("RUNNING", 2), ("SUCCEEDED", 3)]
+    seen = []
     ticks = count(1, 1)
     t = run_crawl(conn, FakeAdapter(items, polls), {}, "tok",
-                  poll_every=0, now=lambda: next(ticks), sleep=NOOP)
-    with conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM run_metric WHERE run_id = %s", (t["run_id"],))
-        assert cur.fetchone()[0] == 3  # 3 điểm poll = tiến độ cào
+                  poll_every=0, now=lambda: next(ticks), sleep=NOOP,
+                  on_progress=lambda c, r, s: seen.append((c, s)))
+    assert seen == [(1, "RUNNING"), (2, "RUNNING"), (3, "SUCCEEDED")]
     assert t["inserted"] == 3
 
 
@@ -80,7 +82,7 @@ def test_crawl_fails_when_actor_not_succeeded(conn):
     ticks = count(1, 1)
     try:
         run_crawl(conn, FakeAdapter(items, polls), {}, "tok",
-                  poll_every=0, now=lambda: next(ticks), sleep=NOOP)
+                  poll_every=0, now=lambda: next(ticks), sleep=NOOP, on_progress=NOOP)
         assert False, "expected RuntimeError"
     except RuntimeError:
         pass

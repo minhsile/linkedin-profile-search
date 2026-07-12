@@ -105,16 +105,6 @@ def set_checkpoint(conn, run_id, offset) -> None:
     conn.commit()
 
 
-def record_metric(conn, run_id, processed, inserted, enriched, errors, rate) -> None:
-    with conn.cursor() as cur:
-        cur.execute(
-            """INSERT INTO run_metric (run_id, processed, inserted, enriched, errors, rate_per_sec)
-               VALUES (%s, %s, %s, %s, %s, %s)""",
-            (run_id, processed, inserted, enriched, errors, rate),
-        )
-    conn.commit()
-
-
 def finish_run(conn, run_id, status, totals) -> None:
     with conn.cursor() as cur:
         cur.execute(

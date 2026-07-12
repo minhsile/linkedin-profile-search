@@ -113,4 +113,6 @@ python -m lps.cli crawl --config config.json
 Output in tiến độ từng bộ `[1/2] ... [2/2] ...` + dòng **TỔNG** cuối.
 (Mỗi bộ là 1 actor run → tính phí Apify riêng cho mỗi bộ.)
 
+> File mẫu `config.example.json` chính là dạng mảng này: **bộ đầu liệt kê đầy đủ mọi field** (dùng làm tham chiếu), **bộ sau tối giản** minh hoạ chạy nhiều bộ. Muốn 1 bộ thôi thì xoá bớt để lại 1 phần tử, hoặc bỏ luôn dấu `[ ]` để thành 1 object.
+
 > Các field `*Ids` gửi cho actor phải là **mảng chuỗi**. Pipeline tự động ép số sang chuỗi, nên `[4]` hay `["4"]` đều được.

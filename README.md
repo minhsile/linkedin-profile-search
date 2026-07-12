@@ -49,9 +49,10 @@ python -m lps.cli status                 # thống kê run trong terminal
 | `python -m lps.cli status [--run <RUN_ID>]` | Xem trạng thái run |
 
 ## Theo dõi throughput
-Trong lúc crawl, mỗi vài giây terminal in dòng `Apify cào: N profiles (X/s) [status]`
-— chính là tốc độ Apify cào dataset theo thời gian thực. Khi xong chuyển sang bước ingest/dedup
-và in tổng kết `fetched / inserted / enriched / unchanged / errors`.
+Cào xong, terminal in **1 dòng tổng kết**:
+`Apify cao xong: N profiles / Ts (~R profiles/s) [SUCCEEDED]` — tổng số profile cào được,
+thời gian cào end-to-end (gồm cả lúc Apify khởi động actor), và throughput trung bình `R = N/T`.
+Sau đó là bước ingest/dedup, in tổng kết `fetched / inserted / enriched / unchanged / errors`.
 
 ## Cấu trúc
 

@@ -1,6 +1,6 @@
 import json
 from lps.models import CanonicalProfile
-from lps.normalize import normalize_slug, normalize_text, content_hash
+from lps.normalize import normalize_slug, content_hash
 from lps.db import get_person_by_slug, insert_person, update_person, SCALAR_COLUMNS
 
 
@@ -45,19 +45,15 @@ def ingest_profile(conn, profile: CanonicalProfile) -> str:
     slug = profile.linkedin_slug or normalize_slug(profile.linkedin_url)
     profile.linkedin_slug = slug
     chash = content_hash(profile.raw or profile.data)
-    norm_name = normalize_text(profile.full_name)
-    norm_company = normalize_text(profile.current_company)
 
     if not slug:
-        insert_person(conn, profile, needs_review=True, content_hash=chash,
-                      norm_name=norm_name, norm_company=norm_company)
+        insert_person(conn, profile, needs_review=True, content_hash=chash)
         conn.commit()
         return "needs_review"
 
     row = get_person_by_slug(conn, slug)
     if row is None:
-        insert_person(conn, profile, needs_review=False, content_hash=chash,
-                      norm_name=norm_name, norm_company=norm_company)
+        insert_person(conn, profile, needs_review=False, content_hash=chash)
         conn.commit()
         return "inserted"
 

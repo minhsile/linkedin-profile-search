@@ -1,6 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
-
 CREATE TABLE IF NOT EXISTS person (
     id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     linkedin_slug    text UNIQUE,
@@ -16,8 +13,6 @@ CREATE TABLE IF NOT EXISTS person (
     connections      int,
     followers        int,
     email            text,
-    norm_name        text,
-    norm_company     text,
     data             jsonb NOT NULL DEFAULT '{}'::jsonb,
     sources          text[] NOT NULL DEFAULT '{}',
     source_hashes    jsonb NOT NULL DEFAULT '{}'::jsonb,

@@ -47,23 +47,21 @@ def get_person_by_slug(conn, slug: str) -> dict | None:
         return cur.fetchone()
 
 
-def insert_person(conn, profile, *, needs_review, content_hash, norm_name, norm_company) -> str:
+def insert_person(conn, profile, *, needs_review, content_hash) -> str:
     vals = {c: getattr(profile, c) for c in SCALAR_COLUMNS}
     with conn.cursor() as cur:
         cur.execute(
             """
             INSERT INTO person (linkedin_slug, linkedin_url, full_name, first_name,
                 last_name, headline, location, country, current_company, current_title,
-                connections, followers, email, norm_name, norm_company, data, sources,
-                source_hashes, needs_review)
+                connections, followers, email, data, sources, source_hashes, needs_review)
             VALUES (%(linkedin_slug)s, %(linkedin_url)s, %(full_name)s, %(first_name)s,
                 %(last_name)s, %(headline)s, %(location)s, %(country)s, %(current_company)s,
-                %(current_title)s, %(connections)s, %(followers)s, %(email)s, %(norm_name)s,
-                %(norm_company)s, %(data)s, %(sources)s, %(source_hashes)s, %(needs_review)s)
+                %(current_title)s, %(connections)s, %(followers)s, %(email)s, %(data)s,
+                %(sources)s, %(source_hashes)s, %(needs_review)s)
             RETURNING id
             """,
-            {**vals, "norm_name": norm_name, "norm_company": norm_company,
-             "data": Jsonb(profile.data), "sources": [profile.source],
+            {**vals, "data": Jsonb(profile.data), "sources": [profile.source],
              "source_hashes": Jsonb({profile.source: content_hash}),
              "needs_review": needs_review},
         )

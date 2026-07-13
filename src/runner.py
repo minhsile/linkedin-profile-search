@@ -1,9 +1,9 @@
 import time
 import logging
-from lps.db import create_run, set_checkpoint, finish_run, get_run
-from lps.ingest import ingest_profile
+from utilities.database import create_run, set_checkpoint, finish_run, get_run
+from src.ingest import ingest_profile
 
-log = logging.getLogger("lps.runner")
+log = logging.getLogger(__name__)
 
 _TERMINAL = {"SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT", "TIMED_OUT"}
 

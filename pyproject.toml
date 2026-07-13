@@ -3,16 +3,17 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lps"
+name = "linkedin-profile-search"
 version = "0.1.0"
 description = "LinkedIn profile crawl pipeline (Apify harvestapi -> Postgres)"
 requires-python = ">=3.12"
 dependencies = [
-    "apify-client>=1.7",
+    "apify-client>=1.7,<3",
     "psycopg[binary]>=3.1",
     "pydantic>=2.5",
     "python-dotenv>=1.0",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+py-modules = ["config", "main"]
+packages = ["src", "utilities", "research", "research.linkedin_scraping"]

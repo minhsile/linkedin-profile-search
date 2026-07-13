@@ -108,7 +108,7 @@ người trùng giữa các bộ.
 
 Chạy như thường:
 ```bash
-python -m lps.cli crawl --config config.json
+python main.py crawl --config config.json
 ```
 Output in tiến độ từng bộ `[1/2] ... [2/2] ...` + dòng **TỔNG** cuối.
 (Mỗi bộ là 1 actor run → tính phí Apify riêng cho mỗi bộ.)

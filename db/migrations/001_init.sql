@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS person (
+CREATE TABLE IF NOT EXISTS candidates (
     id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     linkedin_slug    text UNIQUE,
     linkedin_url     text,
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS person (
     updated_at       timestamptz NOT NULL DEFAULT now(),
     last_enriched_at timestamptz
 );
-CREATE INDEX IF NOT EXISTS person_current_company_idx ON person (current_company);
-CREATE INDEX IF NOT EXISTS person_data_gin ON person USING gin (data);
+CREATE INDEX IF NOT EXISTS candidates_current_company_idx ON candidates (current_company);
+CREATE INDEX IF NOT EXISTS candidates_data_gin ON candidates USING gin (data);
 
 CREATE TABLE IF NOT EXISTS crawl_run (
     id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),

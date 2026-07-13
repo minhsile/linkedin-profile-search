@@ -1,7 +1,7 @@
 import json
 from src.models import CanonicalProfile
 from src.normalize import normalize_slug, content_hash
-from utilities.database import get_person_by_slug, insert_person, update_person, SCALAR_COLUMNS
+from utilities.database import get_candidate_by_slug, insert_candidate, update_candidate, SCALAR_COLUMNS
 
 
 def _dedup_list(items: list) -> list:
@@ -47,13 +47,13 @@ def ingest_profile(conn, profile: CanonicalProfile) -> str:
     chash = content_hash(profile.raw or profile.data)
 
     if not slug:
-        insert_person(conn, profile, needs_review=True, content_hash=chash)
+        insert_candidate(conn, profile, needs_review=True, content_hash=chash)
         conn.commit()
         return "needs_review"
 
-    row = get_person_by_slug(conn, slug)
+    row = get_candidate_by_slug(conn, slug)
     if row is None:
-        insert_person(conn, profile, needs_review=False, content_hash=chash)
+        insert_candidate(conn, profile, needs_review=False, content_hash=chash)
         conn.commit()
         return "inserted"
 
@@ -65,7 +65,7 @@ def ingest_profile(conn, profile: CanonicalProfile) -> str:
     scalars = merge_scalars(row, profile)
     sources = list(dict.fromkeys(list(row["sources"]) + [profile.source]))
     hashes[profile.source] = chash
-    update_person(conn, row["id"], scalars=scalars, data=merged_data,
-                  sources=sources, source_hashes=hashes)
+    update_candidate(conn, row["id"], scalars=scalars, data=merged_data,
+                     sources=sources, source_hashes=hashes)
     conn.commit()
     return "enriched"

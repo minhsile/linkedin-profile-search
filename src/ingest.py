@@ -1,7 +1,7 @@
 import json
-from lps.models import CanonicalProfile
-from lps.normalize import normalize_slug, content_hash
-from lps.db import get_person_by_slug, insert_person, update_person, SCALAR_COLUMNS
+from src.models import CanonicalProfile
+from src.normalize import normalize_slug, content_hash
+from utilities.database import get_person_by_slug, insert_person, update_person, SCALAR_COLUMNS
 
 
 def _dedup_list(items: list) -> list:

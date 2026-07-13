@@ -1,8 +1,8 @@
 import re
 from typing import Iterator
 from apify_client import ApifyClient
-from lps.models import CanonicalProfile
-from lps.normalize import normalize_slug
+from src.models import CanonicalProfile
+from src.normalize import normalize_slug
 
 ACTOR_ID = "harvestapi/linkedin-profile-search"
 

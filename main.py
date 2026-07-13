@@ -1,15 +1,15 @@
 import argparse
 import sys
-from lps.settings import load_settings, load_search_config, normalize_configs
-from lps.db import connect, run_migrations, get_run
-from lps.runner import run_crawl
-from lps.sources.harvestapi import HarvestApiSource
+from config import load_settings, load_search_config, normalize_configs
+from utilities.database import connect, run_migrations, get_run
+from src.runner import run_crawl
+from research.linkedin_scraping.harvestapi import HarvestApiSource
 
 _KEYS = ("fetched", "inserted", "enriched", "unchanged", "errors")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="lps", description="LinkedIn profile crawl pipeline")
+    p = argparse.ArgumentParser(prog="linkedin-crawl", description="LinkedIn profile crawl pipeline")
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("migrate", help="apply DB migrations")
     c = sub.add_parser("crawl", help="run a crawl (config may be 1 object or an array)")

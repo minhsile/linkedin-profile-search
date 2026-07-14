@@ -41,18 +41,18 @@ SCALAR_COLUMNS = [
 ]
 
 
-def get_person_by_slug(conn, slug: str) -> dict | None:
+def get_candidate_by_slug(conn, slug: str) -> dict | None:
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute("SELECT * FROM person WHERE linkedin_slug = %s", (slug,))
+        cur.execute("SELECT * FROM candidates WHERE linkedin_slug = %s", (slug,))
         return cur.fetchone()
 
 
-def insert_person(conn, profile, *, needs_review, content_hash) -> str:
+def insert_candidate(conn, profile, *, needs_review, content_hash) -> str:
     vals = {c: getattr(profile, c) for c in SCALAR_COLUMNS}
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO person (linkedin_slug, linkedin_url, full_name, first_name,
+            INSERT INTO candidates (linkedin_slug, linkedin_url, full_name, first_name,
                 last_name, headline, location, country, current_company, current_title,
                 connections, followers, email, data, sources, source_hashes, needs_review)
             VALUES (%(linkedin_slug)s, %(linkedin_url)s, %(full_name)s, %(first_name)s,
@@ -68,19 +68,19 @@ def insert_person(conn, profile, *, needs_review, content_hash) -> str:
         return str(cur.fetchone()[0])
 
 
-def update_person(conn, person_id, *, scalars, data, sources, source_hashes) -> None:
+def update_candidate(conn, candidate_id, *, scalars, data, sources, source_hashes) -> None:
     sets = ", ".join(f"{k} = %({k})s" for k in scalars)
     prefix = (sets + ", ") if sets else ""
     with conn.cursor() as cur:
         cur.execute(
             f"""
-            UPDATE person SET {prefix}
+            UPDATE candidates SET {prefix}
                 data = %(data)s, sources = %(sources)s, source_hashes = %(source_hashes)s,
                 updated_at = now(), last_enriched_at = now()
             WHERE id = %(id)s
             """,
             {**scalars, "data": Jsonb(data), "sources": sources,
-             "source_hashes": Jsonb(source_hashes), "id": person_id},
+             "source_hashes": Jsonb(source_hashes), "id": candidate_id},
         )
 
 

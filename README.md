@@ -63,7 +63,7 @@ Sau đó là bước ingest/dedup, in tổng kết `fetched / inserted / enriche
 config.py                          settings · load .env + config.json
 main.py                            CLI entrypoint (migrate · crawl · status)
 src/                               models · normalize · ingest · runner
-utilities/database.py              kết nối + SQL helpers (person · crawl_run · migrations)
+utilities/database.py              kết nối + SQL helpers (candidates · crawl_run · migrations)
 research/linkedin_scraping/        harvestapi.py (adapter Apify)
 db/migrations/                     SQL schema
 docs/                              research-comparison.md · CONFIG.md · dictionaries/ · superpowers/{specs,plans}
